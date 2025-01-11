@@ -6,22 +6,22 @@ use std::error::Error;
 pub struct Category {
   pub id: String,
   pub name: String,
-  pub box_art_url: String,
+  // pub box_art_url: String,
 }
 
 #[derive(Deserialize)]
 pub struct Stream {
-  pub id: String,
-  pub user_id: String,
   pub user_login: String,
-  pub user_name: String,
-  pub game_id: String,
-  pub game_name: String,
-  #[serde(rename = "type")]
-  pub type_: String,
-  pub title: String,
-  pub viewer_count: i64,
-  pub started_at: String,
+  // pub id: String,
+  // pub user_id: String,
+  // pub user_name: String,
+  // pub game_id: String,
+  // pub game_name: String,
+  // #[serde(rename = "type")]
+  // pub type_: String,
+  // pub title: String,
+  // pub viewer_count: i64,
+  // pub started_at: String,
 }
 
 #[derive(Deserialize)]
@@ -36,8 +36,8 @@ struct Response<T> {
 }
 pub struct TwitchHelix {
   client: Client,
-  client_id: String,
-  access_token: String,
+  // client_id: String,
+  // access_token: String,
 }
 
 impl TwitchHelix {
@@ -58,8 +58,8 @@ impl TwitchHelix {
 
     Self {
       client,
-      client_id,
-      access_token,
+      // client_id,
+      // access_token,
     }
   }
 
