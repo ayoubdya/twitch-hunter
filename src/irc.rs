@@ -1,16 +1,24 @@
-use std::error::Error;
-
 use futures::StreamExt;
 use irc::client::prelude::*;
-use tokio;
+use lazy_static::lazy_static;
+use regex::Regex;
+use std::error::Error;
+use tokio::sync::mpsc::Sender;
+
+lazy_static! {
+  pub static ref REGEX_FILTER: Regex = Regex::new(r"https://.+").unwrap();
+}
 
 pub struct TwitchIrc {
+  pub sender: Sender<String>,
+  pub channel: String,
   pub client: Client,
 }
 
 impl TwitchIrc {
-  pub async fn new(channels: Vec<String>) -> Self {
-    let channels = channels.into_iter().map(|c| format!("#{}", c)).collect();
+  pub async fn new(sender: Sender<String>, channel: String) -> Self {
+    // let channels = channels.into_iter().map(|c| format!("#{}", c)).collect();
+    let channels = vec![format!("#{}", channel)];
 
     let config = Config {
       nickname: Some("justinfan12345".to_owned()),
@@ -25,22 +33,30 @@ impl TwitchIrc {
       .await
       .expect("Could not create IRC client");
 
-    Self { client }
+    Self {
+      sender,
+      channel,
+      client,
+    }
   }
 
   pub async fn run(&mut self) -> Result<(), Box<dyn Error>> {
     self.client.identify()?;
     let mut stream = self.client.stream()?;
+    println!("Connected to Twitch IRC channel {}", self.channel);
     while let Some(message) = stream.next().await.transpose()? {
-      let Command::PRIVMSG(ref channel, ref msg) = message.command else {
+      let Command::PRIVMSG(_, ref msg) = message.command else {
         continue;
       };
-      println!(
-        "[{}] {}: {}",
-        channel,
-        message.source_nickname().unwrap_or("unknown"),
-        msg
-      );
+      if REGEX_FILTER.captures(msg).is_some() {
+        let msg = format!(
+          "{}| {}: {}",
+          self.channel,
+          message.source_nickname().unwrap_or("unknown"),
+          msg
+        );
+        self.sender.send(msg).await?;
+      }
     }
 
     Ok(())
