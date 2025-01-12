@@ -17,14 +17,37 @@ async fn main() {
 
   let helix = TwitchHelix::new(args.client_id, args.access_token);
 
-  let category_id = match helix.get_category_id(args.category_name.as_str()).await {
-    Ok(Some(id)) => id,
-    Ok(None) => {
-      eprintln!("ERROR: Category not found");
-      exit(1);
+  let streams = match args {
+    Args {
+      category_name: Some(name),
+      ..
+    } => {
+      let category_id = match helix.get_category_id(name.as_str()).await {
+        Ok(Some(id)) => id,
+        Ok(None) => {
+          eprintln!("ERROR: Category not found");
+          exit(1);
+        }
+        Err(e) => {
+          eprintln!("ERROR: {}", e);
+          exit(1);
+        }
+      };
+
+      let Ok(streams) = helix.get_streams(category_id.as_str()).await else {
+        eprintln!("ERROR: Could not get streams");
+        exit(1);
+      };
+      println!("Found {} streams", streams.len());
+
+      streams.into_iter().map(|s| s.user_login).collect()
     }
-    Err(e) => {
-      eprintln!("ERROR: {}", e);
+    Args {
+      streams: Some(streams),
+      ..
+    } => streams,
+    _ => {
+      eprintln!("ERROR: No category or streams provided");
       exit(1);
     }
   };
@@ -32,19 +55,13 @@ async fn main() {
   // Marvel Rivals 1264310518
   // let category_id = "1264310518".to_owned();
 
-  let Ok(streams) = helix.get_streams(category_id.as_str()).await else {
-    eprintln!("ERROR: Could not get streams");
-    exit(1);
-  };
-  println!("Found {} streams", streams.len());
-
   let (tx, mut rx) = channel(100);
 
   let regex_filter = Arc::new(args.filter);
 
   let batch_size = args.batch_size;
   for i in 0..streams.len() / batch_size + 1 {
-    println!("Spawning batch {}", i);
+    // println!("Spawning batch {}", i);
 
     let tx = tx.clone();
     let regex_filter = regex_filter.clone();
@@ -53,7 +70,7 @@ async fn main() {
       .iter()
       .skip(i * batch_size)
       .take(batch_size)
-      .map(|s| s.user_login.clone())
+      .map(|s| s.clone())
       .collect();
 
     tokio::spawn(async move {
