@@ -10,17 +10,26 @@ Twitch Hunter is a tool that connects to multiple Twitch IRC channels and looks 
 
 ## Installation
 
+Using cargo:
+
+```
+  cargo install twitch-hunter
+```
+
+Or build from source:
+
 1. Clone the repository:
 
-   ```sh
-   git clone https://github.com/ayoubdya/twitch-hunter.git
-   cd twitch-hunter
-   ```
+```
+  git clone https://github.com/ayoubdya/twitch-hunter.git
+  cd twitch-hunter
+```
 
 2. Install dependencies:
-   ```sh
-   cargo build --release
-   ```
+
+```
+  cargo build --release
+```
 
 ## Usage
 
