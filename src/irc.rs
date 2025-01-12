@@ -52,12 +52,6 @@ impl TwitchIrc {
         continue;
       };
       if self.regex_filter.captures(msg).is_some() {
-        // let msg = format!(
-        //   "{} | {}: {}",
-        //   channel,
-        //   message.source_nickname().unwrap_or("unknown"),
-        //   msg
-        // );
         let nickname = message.source_nickname().unwrap_or("unknown").to_owned();
         let msg = Message {
           channel: channel.to_owned(),

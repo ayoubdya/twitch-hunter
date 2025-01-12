@@ -96,15 +96,15 @@ impl TwitchHelix {
     match res.status() {
       StatusCode::OK => (),
       StatusCode::BAD_REQUEST => {
-        eprintln!("ERROR: BAD REQUEST: {:?}", res.text().await?);
+        eprintln!("ERROR: bad request: {:?}", res.text().await?);
         return Err("Bad request".into());
       }
       StatusCode::UNAUTHORIZED => {
-        eprintln!("ERROR: UNAUTHORIZED: {:?}", res.text().await?);
+        eprintln!("ERROR: unauthorized: {:?}", res.text().await?);
         return Err("Unauthorized".into());
       }
       _ => {
-        eprintln!("ERROR: COULD NOT GET STREAMS: {:?}", res.text().await?);
+        eprintln!("ERROR: could not get streams: {:?}", res.text().await?);
         return Err("Unexpected error".into());
       }
     }
@@ -122,15 +122,15 @@ impl TwitchHelix {
     match res.status() {
       StatusCode::OK => (),
       StatusCode::BAD_REQUEST => {
-        eprintln!("ERROR: BAD REQUEST: {:?}", res.text().await?);
+        eprintln!("ERROR: bad request: {:?}", res.text().await?);
         return Err("Bad request".into());
       }
       StatusCode::UNAUTHORIZED => {
-        eprintln!("ERROR: UNAUTHORIZED: {:?}", res.text().await?);
+        eprintln!("ERROR: unauthorized: {:?}", res.text().await?);
         return Err("Unauthorized".into());
       }
       _ => {
-        eprintln!("ERROR: COULD NOT GET CATEGORIES: {:?}", res.text().await?);
+        eprintln!("ERROR: could not get categories: {:?}", res.text().await?);
         return Err("Unexpected error".into());
       }
     }

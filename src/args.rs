@@ -11,6 +11,6 @@ pub struct Args {
   pub category_name: String,
   #[arg(short, long, default_value = "600")]
   pub batch_size: usize,
-  #[arg(short, long)]
+  #[arg(short, long, value_name = "REGEX")]
   pub filter: Regex,
 }

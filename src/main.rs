@@ -1,5 +1,5 @@
 use clap::Parser;
-use std::{error::Error, sync::Arc};
+use std::{process::exit, sync::Arc};
 use tokio::sync::mpsc::channel;
 
 mod helix;
@@ -11,36 +11,31 @@ use irc::TwitchIrc;
 mod args;
 use args::Args;
 
-// lazy_static! {
-//   pub static ref REGEX_FILTER: Regex = Regex::new(r"https://.+").unwrap();
-// }
-
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn Error>> {
+async fn main() {
   let args = Args::parse();
-  println!("{:?}", args);
-  // std::process::exit(0);
 
-  // let client_id = std::env::var("TWITCH_CLIENT_ID").expect("TWITCH_CLIENT_ID not set");
-  // let access_token = std::env::var("TWITCH_ACCESS_TOKEN").expect("TWITCH_ACCESS_TOKEN not set");
   let helix = TwitchHelix::new(args.client_id, args.access_token);
 
   let category_id = match helix.get_category_id(args.category_name.as_str()).await {
     Ok(Some(id)) => id,
     Ok(None) => {
-      eprintln!("Category not found");
-      std::process::exit(1);
+      eprintln!("ERROR: Category not found");
+      exit(1);
     }
     Err(e) => {
-      eprintln!("Error: {}", e);
-      std::process::exit(1);
+      eprintln!("ERROR: {}", e);
+      exit(1);
     }
   };
 
   // Marvel Rivals 1264310518
   // let category_id = "1264310518".to_owned();
 
-  let streams = helix.get_streams(category_id.as_str()).await?;
+  let Ok(streams) = helix.get_streams(category_id.as_str()).await else {
+    eprintln!("ERROR: Could not get streams");
+    exit(1);
+  };
   println!("Found {} streams", streams.len());
 
   let (tx, mut rx) = channel(100);
@@ -63,13 +58,14 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     tokio::spawn(async move {
       let mut irc = TwitchIrc::new(tx, streams_batch, regex_filter).await;
-      irc.run().await.unwrap();
+      let Ok(_) = irc.run().await else {
+        eprintln!("ERROR: Could not run IRC client");
+        exit(1);
+      };
     });
   }
 
   while let Some(msg) = rx.recv().await {
     println!("{} | {}: {}", msg.channel, msg.nickname, msg.msg);
   }
-
-  Ok(())
 }
