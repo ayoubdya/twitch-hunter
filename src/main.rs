@@ -58,10 +58,13 @@ async fn main() {
 
     tokio::spawn(async move {
       let mut irc = TwitchIrc::new(tx, streams_batch, regex_filter).await;
-      let Ok(_) = irc.run().await else {
-        eprintln!("ERROR: Could not run IRC client");
-        exit(1);
-      };
+      match irc.run().await {
+        Ok(_) => {}
+        Err(e) => {
+          eprintln!("ERROR: Could not run IRC client : {}", e);
+          exit(1);
+        }
+      }
     });
   }
 
