@@ -8,6 +8,7 @@ pub struct Message {
   pub channel: String,
   pub nickname: String,
   pub msg: String,
+  pub captures: Vec<String>,
 }
 
 pub struct TwitchIrc {
@@ -22,7 +23,7 @@ impl TwitchIrc {
     channels: Vec<String>,
     regex_filter: Arc<Regex>,
   ) -> Self {
-    let channels = channels.iter().map(|c| format!("#{}", c)).collect();
+    let channels = channels.into_iter().map(|c| format!("#{}", c)).collect();
 
     let config = Config {
       nickname: Some("justinfan12345".to_owned()),
@@ -51,12 +52,21 @@ impl TwitchIrc {
       let Command::PRIVMSG(ref channel, ref msg) = message.command else {
         continue;
       };
-      if self.regex_filter.captures(msg).is_some() {
+      if let Some(captures) = self.regex_filter.captures(msg) {
         let nickname = message.source_nickname().unwrap_or("unknown").to_owned();
+
+        let captures = captures
+          .iter()
+          .skip(1)
+          .filter_map(|c| c)
+          .map(|c| c.as_str().to_owned())
+          .collect::<Vec<String>>();
+
         let msg = Message {
           channel: channel.to_owned(),
           nickname,
           msg: msg.to_owned(),
+          captures,
         };
         self.sender.send(msg).await?;
       }
