@@ -1,27 +1,35 @@
 use futures::StreamExt;
 use irc::client::prelude::*;
-use std::error::Error;
+use regex::Regex;
+use std::{error::Error, sync::Arc};
 use tokio::sync::mpsc::Sender;
 
-use crate::REGEX_FILTER;
+pub struct Message {
+  pub channel: String,
+  pub nickname: String,
+  pub msg: String,
+}
 
 pub struct TwitchIrc {
-  pub sender: Sender<String>,
-  pub channels: Vec<String>,
+  pub sender: Sender<Message>,
   pub client: Client,
+  pub regex_filter: Arc<Regex>,
 }
 
 impl TwitchIrc {
-  pub async fn new(sender: Sender<String>, channels: Vec<String>) -> Self {
-    let channels_hash = channels.iter().map(|c| format!("#{}", c)).collect();
-    // let channels = vec![format!("#{}", channel)];
+  pub async fn new(
+    sender: Sender<Message>,
+    channels: Vec<String>,
+    regex_filter: Arc<Regex>,
+  ) -> Self {
+    let channels = channels.iter().map(|c| format!("#{}", c)).collect();
 
     let config = Config {
       nickname: Some("justinfan12345".to_owned()),
       server: Some("irc.chat.twitch.tv".to_owned()),
       port: Some(6667),
       use_tls: Some(false),
-      channels: channels_hash,
+      channels,
       ..Default::default()
     };
 
@@ -31,7 +39,7 @@ impl TwitchIrc {
 
     Self {
       sender,
-      channels,
+      regex_filter,
       client,
     }
   }
@@ -43,13 +51,19 @@ impl TwitchIrc {
       let Command::PRIVMSG(ref channel, ref msg) = message.command else {
         continue;
       };
-      if REGEX_FILTER.captures(msg).is_some() {
-        let msg = format!(
-          "{} | {}: {}",
-          channel,
-          message.source_nickname().unwrap_or("unknown"),
-          msg
-        );
+      if self.regex_filter.captures(msg).is_some() {
+        // let msg = format!(
+        //   "{} | {}: {}",
+        //   channel,
+        //   message.source_nickname().unwrap_or("unknown"),
+        //   msg
+        // );
+        let nickname = message.source_nickname().unwrap_or("unknown").to_owned();
+        let msg = Message {
+          channel: channel.to_owned(),
+          nickname,
+          msg: msg.to_owned(),
+        };
         self.sender.send(msg).await?;
       }
     }

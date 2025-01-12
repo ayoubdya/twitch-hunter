@@ -41,6 +41,8 @@ pub struct TwitchHelix {
 }
 
 impl TwitchHelix {
+  const BASE_URL: &str = "https://api.twitch.tv/helix";
+
   pub fn new(client_id: String, access_token: String) -> Self {
     let mut headers = header::HeaderMap::new();
     headers.insert(
@@ -83,12 +85,13 @@ impl TwitchHelix {
     after_cursor: Option<String>,
   ) -> Result<(Vec<Stream>, Option<String>), Box<dyn Error>> {
     let url = format!(
-      "https://api.twitch.tv/helix/streams?game_id={}&type=live&first=100&after={}",
+      "{}/streams?type=live&first=100&game_id={}&after={}",
+      Self::BASE_URL,
       category_id,
       after_cursor.unwrap_or("".to_string())
     );
 
-    let res = self.client.get(&url).send().await?;
+    let res = self.client.get(url).send().await?;
 
     match res.status() {
       StatusCode::OK => (),
@@ -106,18 +109,15 @@ impl TwitchHelix {
       }
     }
 
-    let body: Response<Stream> = res.json::<_>().await?;
+    let body: Response<Stream> = res.json().await?;
 
     return Ok((body.data, body.pagination.cursor));
   }
 
   pub async fn get_categories(&self, keyword: &str) -> Result<Vec<Category>, Box<dyn Error>> {
-    let url = format!(
-      "https://api.twitch.tv/helix/search/categories?query={}",
-      keyword
-    );
+    let url = format!("{}/search/categories?query={}", Self::BASE_URL, keyword);
 
-    let res = self.client.get(&url).send().await?;
+    let res = self.client.get(url).send().await?;
 
     match res.status() {
       StatusCode::OK => (),
@@ -135,7 +135,7 @@ impl TwitchHelix {
       }
     }
 
-    let body: Response<Category> = res.json::<_>().await?;
+    let body: Response<Category> = res.json().await?;
 
     Ok(body.data)
   }
@@ -157,23 +157,28 @@ impl TwitchHelix {
 mod tests {
   #[cfg(test)]
   use super::*;
+  use crate::TwitchHelix;
+
+  fn new_client() -> TwitchHelix {
+    let client_id = std::env::var("TWITCH_CLIENT_ID").expect("TWITCH_CLIENT_ID not set");
+    let access_token = std::env::var("TWITCH_ACCESS_TOKEN").expect("TWITCH_ACCESS_TOKEN not set");
+    TwitchHelix::new(client_id, access_token)
+  }
 
   #[tokio::test]
   async fn test_get_categories() {
-    let client_id = std::env::var("TWITCH_CLIENT_ID").expect("TWITCH_CLIENT_ID not set");
-    let access_token = std::env::var("TWITCH_ACCESS_TOKEN").expect("TWITCH_ACCESS_TOKEN not set");
+    let helix = new_client();
 
-    let helix = TwitchHelix::new(client_id, access_token);
     let data = helix.get_categories("Rust").await.unwrap();
     assert!(data.len() > 0);
+
+    let data = helix.get_categories("sqdfsdfqqsdf").await.unwrap();
+    assert_eq!(data.len(), 0);
   }
 
   #[tokio::test]
   async fn test_get_category_id() {
-    let client_id = std::env::var("TWITCH_CLIENT_ID").expect("TWITCH_CLIENT_ID not set");
-    let access_token = std::env::var("TWITCH_ACCESS_TOKEN").expect("TWITCH_ACCESS_TOKEN not set");
-
-    let helix = TwitchHelix::new(client_id, access_token);
+    let helix = new_client();
 
     let category_id = helix.get_category_id("Rust").await.unwrap();
     assert_eq!(category_id, Some("263490".to_string()));
@@ -184,11 +189,12 @@ mod tests {
 
   #[tokio::test]
   async fn test_get_streams() {
-    let client_id = std::env::var("TWITCH_CLIENT_ID").expect("TWITCH_CLIENT_ID not set");
-    let access_token = std::env::var("TWITCH_ACCESS_TOKEN").expect("TWITCH_ACCESS_TOKEN not set");
+    let helix = new_client();
 
-    let helix = TwitchHelix::new(client_id, access_token);
     let body = helix.get_streams("263490").await.unwrap(); //177157840 33214
     assert!(body.len() > 0);
+
+    let body = helix.get_streams("121515155151").await.unwrap();
+    assert_eq!(body.len(), 0);
   }
 }
