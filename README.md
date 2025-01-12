@@ -19,29 +19,23 @@ Twitch Hunter is a tool that connects to multiple Twitch IRC channels and looks 
 
 2. Install dependencies:
    ```sh
-   cargo build
+   cargo build --release
    ```
-
-## Configuration
-
-Set the following environment variables:
-
-- `TWITCH_CLIENT_ID`: Your Twitch client ID.
-- `TWITCH_ACCESS_TOKEN`: Your Twitch access token.
-
-You can set these variables in your shell or create a `.env` file in the project root:
-
-```sh
-TWITCH_CLIENT_ID=your_client_id
-TWITCH_ACCESS_TOKEN=your_access_token
-```
 
 ## Usage
 
 Run the application:
 
-```sh
-cargo run
+```
+Usage: twitch-hunter [OPTIONS] --client-id <CLIENT_ID> --access-token <ACCESS_TOKEN> --category-name <CATEGORY_NAME> --filter <REGEX>
+
+Options:
+      --client-id <CLIENT_ID>
+      --access-token <ACCESS_TOKEN>
+  -c, --category-name <CATEGORY_NAME>
+  -b, --batch-size <BATCH_SIZE>        [default: 600]
+  -f, --filter <REGEX>
+  -h, --help                           Print help
 ```
 
 ## License
