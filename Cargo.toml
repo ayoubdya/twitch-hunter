@@ -2,6 +2,14 @@
 name = "twitch-hunter"
 version = "0.1.0"
 edition = "2021"
+authors = ["Ayoub DYA <ayoubdya@gmail.com>"]
+description = "A simple tool that looks for specific regex patterns in Twitch chat messages."
+repository = "https://github.com/ayoubdya/twitch-hunter"
+license = "MIT"
+readme = "README.md"
+keywords = ["twitch", "irc", "chat", "regex", "hunter", "bot"]
+categories = ["command-line-utilities", "network-programming"]
+include = ["**/*.rs", "Cargo.toml"]
 
 [dependencies]
 futures = "0.3.31"

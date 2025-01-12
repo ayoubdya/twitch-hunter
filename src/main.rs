@@ -1,3 +1,5 @@
+use lazy_static::lazy_static;
+use regex::Regex;
 use std::error::Error;
 use tokio::sync::mpsc::channel;
 
@@ -7,11 +9,19 @@ use helix::TwitchHelix;
 mod irc;
 use irc::TwitchIrc;
 
+lazy_static! {
+  pub static ref REGEX_FILTER: Regex = Regex::new(r"https://.+").unwrap();
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
   let client_id = std::env::var("TWITCH_CLIENT_ID").expect("TWITCH_CLIENT_ID not set");
   let access_token = std::env::var("TWITCH_ACCESS_TOKEN").expect("TWITCH_ACCESS_TOKEN not set");
   let helix = TwitchHelix::new(client_id, access_token);
+
+  lazy_static! {
+    pub static ref REGEX_FILTER: Regex = Regex::new(r"https://.+").unwrap();
+  }
 
   // let category_id = helix
   //   .get_category_id("Rust")
@@ -27,16 +37,18 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
   let (tx, mut rx) = channel(100);
 
-  let batch_size = 50;
-  for i in 0..(streams.len() / batch_size) {
+  let batch_size = 600;
+  for i in 0..streams.len() / batch_size + 1 {
     println!("Spawning batch {}", i);
     let tx = tx.clone();
+
     let streams_batch = streams
       .iter()
       .skip(i * batch_size)
       .take(batch_size)
       .map(|s| s.user_login.clone())
-      .collect::<Vec<String>>();
+      .collect();
+
     tokio::spawn(async move {
       let mut irc = TwitchIrc::new(tx, streams_batch).await;
       irc.run().await.unwrap();

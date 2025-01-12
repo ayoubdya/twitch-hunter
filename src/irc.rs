@@ -1,13 +1,9 @@
 use futures::StreamExt;
 use irc::client::prelude::*;
-use lazy_static::lazy_static;
-use regex::Regex;
 use std::error::Error;
 use tokio::sync::mpsc::Sender;
 
-lazy_static! {
-  pub static ref REGEX_FILTER: Regex = Regex::new(r"https://.+").unwrap();
-}
+use crate::REGEX_FILTER;
 
 pub struct TwitchIrc {
   pub sender: Sender<String>,
@@ -49,7 +45,7 @@ impl TwitchIrc {
       };
       if REGEX_FILTER.captures(msg).is_some() {
         let msg = format!(
-          "{}| {}: {}",
+          "{} | {}: {}",
           channel,
           message.source_nickname().unwrap_or("unknown"),
           msg
