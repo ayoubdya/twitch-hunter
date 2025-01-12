@@ -7,7 +7,7 @@ description = "A simple tool that looks for specific regex patterns in Twitch ch
 repository = "https://github.com/ayoubdya/twitch-hunter"
 license = "MIT"
 readme = "README.md"
-keywords = ["twitch", "irc", "chat", "regex", "hunter", "bot"]
+keywords = ["twitch", "irc", "chat", "regex", "bot"]
 categories = ["command-line-utilities", "network-programming"]
 include = ["**/*.rs", "Cargo.toml"]
 
