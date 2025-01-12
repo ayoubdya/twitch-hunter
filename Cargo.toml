@@ -1,6 +1,6 @@
 [package]
 name = "twitch-hunter"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 authors = ["Ayoub DYA <ayoubdya@gmail.com>"]
 description = "A simple tool that looks for specific regex patterns in Twitch chat messages."
