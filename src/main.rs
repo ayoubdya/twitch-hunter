@@ -12,6 +12,15 @@ use irc::TwitchIrc;
 mod args;
 use args::Args;
 
+macro_rules! exit {
+  ($($arg:tt)*) => {
+    {
+      eprintln!($($arg)*);
+      exit(1);
+    }
+  };
+}
+
 #[tokio::main]
 async fn main() {
   const SAVE_FILE: &str = "creds.json";
@@ -27,12 +36,10 @@ async fn main() {
       let file = File::open(SAVE_FILE);
       match file {
         Ok(file) => serde_json::from_reader(file).unwrap_or_else(|err| {
-          eprintln!("ERROR: Could not parse credentials from file {SAVE_FILE} : {err}");
-          exit(1);
+          exit!("ERROR: Could not parse credentials from file {SAVE_FILE} : {err}");
         }),
         Err(err) => {
-          eprintln!("ERROR: Missing credentials from arguments or file {SAVE_FILE} : {err}");
-          exit(1);
+          exit!("ERROR: Missing credentials from arguments or file {SAVE_FILE} : {err}");
         }
       }
     }
@@ -41,12 +48,10 @@ async fn main() {
 
   if args.save {
     let file = File::create(SAVE_FILE).unwrap_or_else(|err| {
-      eprintln!("ERROR: Could not create file {SAVE_FILE} : {err}");
-      exit(1);
+      exit!("ERROR: Could not create file {SAVE_FILE} : {err}");
     });
     if let Err(err) = serde_json::to_writer(file, &creds) {
-      eprintln!("ERROR: Could not write credentials to file {SAVE_FILE} : {err}");
-      exit(1);
+      exit!("ERROR: Could not write credentials to file {SAVE_FILE} : {err}");
     }
   }
 
@@ -55,12 +60,10 @@ async fn main() {
       let category_id = match helix.get_category_id(name.as_str()).await {
         Ok(Some(id)) => id,
         Ok(None) => {
-          eprintln!("ERROR: Category not found");
-          exit(1);
+          exit!("ERROR: Category not found");
         }
         Err(err) => {
-          eprintln!("ERROR: {err}");
-          exit(1);
+          exit!("ERROR: {err}");
         }
       };
 
@@ -68,8 +71,7 @@ async fn main() {
         .get_streams(category_id.as_str())
         .await
         .unwrap_or_else(|err| {
-          eprintln!("ERROR: Could not get streams : {err}");
-          exit(1);
+          exit!("ERROR: Could not get streams : {err}");
         });
       println!("Found {} streams", streams.len());
 
@@ -77,8 +79,7 @@ async fn main() {
     }
     (None, Some(streams)) => streams,
     _ => {
-      eprintln!("ERROR: Bad arguments combination");
-      exit(1);
+      exit!("ERROR: Bad arguments combination");
     }
   };
 
@@ -106,8 +107,7 @@ async fn main() {
     tokio::spawn(async move {
       let mut irc = TwitchIrc::new(tx, streams_batch, regex_filter).await;
       irc.run().await.unwrap_or_else(|err| {
-        eprintln!("ERROR: Could not run IRC client : {err}",);
-        exit(1);
+        exit!("ERROR: Could not run IRC client : {err}");
       });
     });
   }
