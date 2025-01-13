@@ -2,11 +2,14 @@ use clap::{ArgGroup, Parser};
 use regex::Regex;
 
 #[derive(Parser)]
-#[command(group(
-    ArgGroup::new("source")
-        .required(true)
-        .args(&["category_name", "streams"]),
-))]
+#[command(
+    version,
+    group(
+        ArgGroup::new("source")
+            .required(true)
+            .args(&["category_name", "streams"]),
+    )
+)]
 pub struct Args {
   #[arg(long)]
   pub client_id: Option<String>,
