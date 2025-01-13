@@ -16,7 +16,12 @@ mod utils;
 
 #[tokio::main]
 async fn main() {
-  const SAVE_FILE: &str = "creds.json";
+  const SAVE_FILENAME: &str = "creds.json";
+  let save_path = std::env::current_exe()
+    .unwrap_or_else(|err| {
+      exit!("ERROR: Could not get current executable path : {err}");
+    })
+    .with_file_name(SAVE_FILENAME);
 
   let args = Args::parse();
 
@@ -26,13 +31,13 @@ async fn main() {
       access_token,
     },
     _ => {
-      let file = File::open(SAVE_FILE);
+      let file = File::open(&save_path);
       match file {
         Ok(file) => serde_json::from_reader(file).unwrap_or_else(|err| {
-          exit!("ERROR: Could not parse credentials from file {SAVE_FILE} : {err}");
+          exit!("ERROR: Could not parse credentials from file {SAVE_FILENAME} : {err}");
         }),
         Err(err) => {
-          exit!("ERROR: Missing credentials from arguments or file {SAVE_FILE} : {err}");
+          exit!("ERROR: Missing credentials from arguments or file {SAVE_FILENAME} : {err}");
         }
       }
     }
@@ -40,11 +45,11 @@ async fn main() {
   let helix = TwitchHelix::new(&creds);
 
   if args.save {
-    let file = File::create(SAVE_FILE).unwrap_or_else(|err| {
-      exit!("ERROR: Could not create file {SAVE_FILE} : {err}");
+    let file = File::create(save_path).unwrap_or_else(|err| {
+      exit!("ERROR: Could not create file {SAVE_FILENAME} : {err}");
     });
     if let Err(err) = serde_json::to_writer(file, &creds) {
-      exit!("ERROR: Could not write credentials to file {SAVE_FILE} : {err}");
+      exit!("ERROR: Could not write credentials to file {SAVE_FILENAME} : {err}");
     }
   }
 

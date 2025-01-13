@@ -22,13 +22,13 @@ pub struct Args {
     long,
     group = "source",
     value_delimiter = ',',
-    value_name = "STREAM1, STREAM2 ..."
+    value_name = "STREAM1,STREAM2 ..."
   )]
   pub streams: Option<Vec<String>>,
   #[arg(short, long, default_value = "100")]
   pub batch_size: usize,
   #[arg(short, long, value_name = "REGEX")]
   pub filter: Regex,
-  #[arg(long)]
+  #[arg(long, help = "Save credentials to file")]
   pub save: bool,
 }
