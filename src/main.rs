@@ -65,12 +65,15 @@ async fn main() {
         }
       };
 
+      println!("Getting streams for category {} ...", name);
+
       let streams = helix
         .get_streams(category_id.as_str())
         .await
         .unwrap_or_else(|err| {
           exit!("ERROR: Could not get streams : {err}");
         });
+
       println!("Found {} streams", streams.len());
 
       streams.into_iter().map(|s| s.user_login).collect()
