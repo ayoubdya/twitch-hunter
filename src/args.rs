@@ -4,6 +4,7 @@ use regex::Regex;
 #[derive(Parser)]
 #[command(
     version,
+    about = "A tool that connects to multiple Twitch IRC channels and looks for specific regex patterns in chat messages.",
     group(
         ArgGroup::new("source")
             .required(true)

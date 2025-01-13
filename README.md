@@ -31,20 +31,30 @@ Or build from source:
   cargo build --release
 ```
 
+## Examples
+
+```
+  twitch-hunter --client-id <CLIENT_ID> --access-token <ACCESS_TOKEN> --save --category-name "Rust" --filter "https://.+"
+  twitch-hunter --streams xqc,loltyler1 --filter 'KEKW'
+```
+
 ## Usage
 
 Run the application:
 
 ```
-Usage: twitch-hunter [OPTIONS] --client-id <CLIENT_ID> --access-token <ACCESS_TOKEN> --category-name <CATEGORY_NAME> --filter <REGEX>
+Usage: twitch-hunter [OPTIONS] --filter <REGEX> <--category-name <CATEGORY_NAME>|--streams <STREAM1,STREAM2 ...>>
 
 Options:
       --client-id <CLIENT_ID>
       --access-token <ACCESS_TOKEN>
   -c, --category-name <CATEGORY_NAME>
-  -b, --batch-size <BATCH_SIZE>        [default: 600]
+  -s, --streams <STREAM1,STREAM2 ...>
+  -b, --batch-size <BATCH_SIZE>        [default: 100]
   -f, --filter <REGEX>
+      --save                           Save credentials to file
   -h, --help                           Print help
+  -V, --version                        Print version
 ```
 
 ## License
