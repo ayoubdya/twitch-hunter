@@ -12,14 +12,7 @@ use irc::TwitchIrc;
 mod args;
 use args::Args;
 
-macro_rules! exit {
-  ($($arg:tt)*) => {
-    {
-      eprintln!($($arg)*);
-      exit(1);
-    }
-  };
-}
+mod utils;
 
 #[tokio::main]
 async fn main() {
@@ -77,14 +70,22 @@ async fn main() {
 
       streams.into_iter().map(|s| s.user_login).collect()
     }
-    (None, Some(streams)) => streams,
+    (None, Some(streams)) => {
+      let (good, bad) = helix.get_users(streams).await.unwrap_or_else(|err| {
+        exit!("ERROR: Could not get users : {err}");
+      });
+      println!("These streams were not found: {}", bad.join(", "));
+
+      if good.is_empty() {
+        exit!("ERROR: No streams found");
+      }
+
+      good
+    }
     _ => {
       exit!("ERROR: Bad arguments combination");
     }
   };
-
-  // Marvel Rivals 1264310518
-  // let category_id = "1264310518".to_owned();
 
   let (tx, mut rx) = channel(100);
 

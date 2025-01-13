@@ -10,6 +10,20 @@ pub struct Category {
 }
 
 #[derive(Deserialize)]
+pub struct User {
+  pub id: String,
+  pub login: String,
+  // pub display_name: String,
+  // #[serde(rename = "type")]
+  // pub type_: String,
+  // pub broadcaster_type: String,
+  // pub description: String,
+  // pub profile_image_url: String,
+  // pub offline_image_url: String,
+  // pub view_count: i64,
+}
+
+#[derive(Deserialize)]
 pub struct Stream {
   pub user_login: String,
   // pub id: String,
@@ -33,6 +47,11 @@ struct Pagination {
 struct Response<T> {
   data: Vec<T>,
   pagination: Pagination,
+}
+
+#[derive(Deserialize)]
+struct ResponseNoPag<T> {
+  data: Vec<T>,
 }
 
 #[derive(Deserialize, Serialize)]
@@ -147,6 +166,49 @@ impl TwitchHelix {
     Ok(body.data)
   }
 
+  //   curl -X GET 'https://api.twitch.tv/helix/users?login=LOLtyler1' \                                                                  ✔  18:23:47 
+  // -H 'Client-Id: g5zg0400k4vhrx2g6xi4hgveruamlv' \
+  // -H 'Authorization: Bearer h3vf8a4e6ie2smxo15su0mxxpfss9n'
+  pub async fn get_users(
+    &self,
+    streams: Vec<String>,
+  ) -> Result<(Vec<String>, Vec<String>), Box<dyn Error>> {
+    let streams = streams
+      .into_iter()
+      .map(|s| s.to_lowercase())
+      .collect::<Vec<String>>();
+
+    let url = format!("{}/users?login={}", Self::BASE_URL, streams.join("&login="));
+
+    let res = self.client.get(url).send().await?;
+
+    match res.status() {
+      StatusCode::OK => (),
+      StatusCode::BAD_REQUEST => {
+        eprintln!("ERROR: bad request: {:?}", res.text().await?);
+        return Err("Bad request".into());
+      }
+      StatusCode::UNAUTHORIZED => {
+        eprintln!("ERROR: unauthorized: {:?}", res.text().await?);
+        return Err("Unauthorized".into());
+      }
+      _ => {
+        eprintln!("ERROR: could not get users: {:?}", res.text().await?);
+        return Err("Unexpected error".into());
+      }
+    }
+
+    let body: ResponseNoPag<User> = res.json().await?;
+
+    let good = body
+      .data
+      .into_iter()
+      .map(|u| u.login)
+      .collect::<Vec<String>>();
+    let bad = streams.into_iter().filter(|s| !good.contains(s)).collect();
+    Ok((good, bad))
+  }
+
   pub async fn get_category_id(&self, keyword: &str) -> Result<Option<String>, Box<dyn Error>> {
     let categories = self.get_categories(keyword).await?;
     let keyword = keyword.to_lowercase();
@@ -174,6 +236,24 @@ mod tests {
     };
 
     TwitchHelix::new(&creds)
+  }
+
+  #[tokio::test]
+  async fn test_get_users() {
+    let helix = new_client();
+
+    let streams = vec!["loltyler1".to_owned(), "fsdqfqsdfsdfsqdfsqdf".to_owned()];
+
+    let (good, bad) = helix.get_users(streams.clone()).await.unwrap();
+    assert_eq!(good.len(), 1);
+    assert_eq!(bad.len(), 1);
+
+    let (good, bad) = helix
+      .get_users(streams.iter().map(|s| s.to_uppercase()).collect())
+      .await
+      .unwrap();
+    assert_eq!(good.len(), 1);
+    assert_eq!(bad.len(), 1);
   }
 
   #[tokio::test]
