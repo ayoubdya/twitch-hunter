@@ -9,9 +9,9 @@ use regex::Regex;
 ))]
 pub struct Args {
   #[arg(long)]
-  pub client_id: String,
+  pub client_id: Option<String>,
   #[arg(long)]
-  pub access_token: String,
+  pub access_token: Option<String>,
   #[arg(short, long, group = "source")]
   pub category_name: Option<String>,
   #[arg(
@@ -26,4 +26,6 @@ pub struct Args {
   pub batch_size: usize,
   #[arg(short, long, value_name = "REGEX")]
   pub filter: Regex,
+  #[arg(long)]
+  pub save: bool,
 }

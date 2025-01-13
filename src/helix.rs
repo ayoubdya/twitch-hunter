@@ -1,5 +1,5 @@
 use reqwest::{header, Client, StatusCode};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::error::Error;
 
 #[derive(Deserialize)]
@@ -34,6 +34,13 @@ struct Response<T> {
   data: Vec<T>,
   pagination: Pagination,
 }
+
+#[derive(Deserialize, Serialize)]
+pub struct Credentials {
+  pub client_id: String,
+  pub access_token: String,
+}
+
 pub struct TwitchHelix {
   client: Client,
   // client_id: String,
@@ -43,15 +50,15 @@ pub struct TwitchHelix {
 impl TwitchHelix {
   const BASE_URL: &str = "https://api.twitch.tv/helix";
 
-  pub fn new(client_id: String, access_token: String) -> Self {
+  pub fn new(creds: &Credentials) -> Self {
     let mut headers = header::HeaderMap::new();
     headers.insert(
       "Client-ID",
-      header::HeaderValue::from_str(&client_id).unwrap(),
+      header::HeaderValue::from_str(creds.client_id.as_str()).unwrap(),
     );
     headers.insert(
       "Authorization",
-      header::HeaderValue::from_str(&format!("Bearer {}", access_token)).unwrap(),
+      header::HeaderValue::from_str(&format!("Bearer {}", creds.access_token)).unwrap(),
     );
     let client = Client::builder()
       .default_headers(headers)
@@ -155,16 +162,18 @@ impl TwitchHelix {
 }
 
 mod tests {
-  #[cfg(test)]
-  #[allow(unused_imports)]
-  use super::*;
-  use crate::TwitchHelix;
+  use crate::helix::{Credentials, TwitchHelix};
 
   #[allow(dead_code)]
   fn new_client() -> TwitchHelix {
     let client_id = std::env::var("TWITCH_CLIENT_ID").expect("TWITCH_CLIENT_ID not set");
     let access_token = std::env::var("TWITCH_ACCESS_TOKEN").expect("TWITCH_ACCESS_TOKEN not set");
-    TwitchHelix::new(client_id, access_token)
+    let creds = Credentials {
+      client_id,
+      access_token,
+    };
+
+    TwitchHelix::new(&creds)
   }
 
   #[tokio::test]

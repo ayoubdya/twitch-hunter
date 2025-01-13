@@ -1,7 +1,7 @@
 use futures::StreamExt;
 use irc::client::prelude::*;
 use regex::Regex;
-use std::{error::Error, sync::Arc};
+use std::{error::Error, fmt::Display, sync::Arc};
 use tokio::sync::mpsc::Sender;
 
 pub struct Message {
@@ -9,6 +9,12 @@ pub struct Message {
   pub nickname: String,
   pub msg: String,
   pub captures: Vec<String>,
+}
+
+impl Display for Message {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    write!(f, "{} | {}: {}", self.channel, self.nickname, self.msg)
+  }
 }
 
 pub struct TwitchIrc {
