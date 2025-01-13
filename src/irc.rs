@@ -1,4 +1,4 @@
-use futures::StreamExt;
+use futures_util::stream::StreamExt;
 use irc::client::prelude::*;
 use regex::Regex;
 use std::{error::Error, fmt::Display, sync::Arc};
