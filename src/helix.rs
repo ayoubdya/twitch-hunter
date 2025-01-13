@@ -166,9 +166,6 @@ impl TwitchHelix {
     Ok(body.data)
   }
 
-  //   curl -X GET 'https://api.twitch.tv/helix/users?login=LOLtyler1' \                                                                  ✔  18:23:47 
-  // -H 'Client-Id: g5zg0400k4vhrx2g6xi4hgveruamlv' \
-  // -H 'Authorization: Bearer h3vf8a4e6ie2smxo15su0mxxpfss9n'
   pub async fn get_users(
     &self,
     streams: Vec<String>,

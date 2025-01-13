@@ -79,7 +79,10 @@ async fn main() {
       let (good, bad) = helix.get_users(streams).await.unwrap_or_else(|err| {
         exit!("ERROR: Could not get users : {err}");
       });
-      println!("These streams were not found: {}", bad.join(", "));
+
+      if !bad.is_empty() {
+        println!("These streams were not found: {}", bad.join(", "));
+      }
 
       if good.is_empty() {
         exit!("ERROR: No streams found");
