@@ -220,10 +220,10 @@ impl TwitchHelix {
   }
 }
 
+#[cfg(test)]
 mod tests {
-  use crate::helix::{Credentials, TwitchHelix};
+  use super::*;
 
-  #[allow(dead_code)]
   fn new_client() -> TwitchHelix {
     let client_id = std::env::var("TWITCH_CLIENT_ID").expect("TWITCH_CLIENT_ID not set");
     let access_token = std::env::var("TWITCH_ACCESS_TOKEN").expect("TWITCH_ACCESS_TOKEN not set");
