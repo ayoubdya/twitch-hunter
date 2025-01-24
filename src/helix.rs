@@ -94,50 +94,49 @@ impl TwitchHelix {
   pub async fn get_streams(&self, category_id: &str) -> Result<Vec<Stream>, Box<dyn Error>> {
     let mut streams = Vec::new();
     let mut cursor = None;
+
     loop {
-      let (new_streams, new_cursor) = self.get_streams_internal(category_id, cursor).await?;
-      streams.extend(new_streams);
-      cursor = new_cursor;
-      if cursor.is_none() {
+      let mut request = self
+        .client
+        .get(format!("{}/streams", Self::BASE_URL))
+        .query(&[("type", "live"), ("first", "100"), ("game_id", category_id)]);
+
+      if let Some(cursor) = cursor {
+        request = request.query(&[("after", cursor)]);
+      }
+
+      let res = request.send().await?;
+
+      match res.status() {
+        StatusCode::OK => (),
+        StatusCode::BAD_REQUEST => {
+          let body = res.text().await?;
+          eprintln!("Bad request error: {}", body);
+          return Err("Bad request".into());
+        }
+        StatusCode::UNAUTHORIZED => {
+          let body = res.text().await?;
+          eprintln!("Unauthorized error: {}", body);
+          return Err("Unauthorized".into());
+        }
+        status => {
+          let body = res.text().await?;
+          eprintln!("Unexpected status code {}: {}", status, body);
+          return Err("Unexpected error".into());
+        }
+      }
+
+      let body: Response<Stream> = res.json().await?;
+      streams.extend(body.data);
+
+      if let Some(new_cursor) = body.pagination.cursor {
+        cursor = Some(new_cursor);
+      } else {
         break;
       }
     }
+
     Ok(streams)
-  }
-
-  async fn get_streams_internal(
-    &self,
-    category_id: &str,
-    after_cursor: Option<String>,
-  ) -> Result<(Vec<Stream>, Option<String>), Box<dyn Error>> {
-    let url = format!(
-      "{}/streams?type=live&first=100&game_id={}&after={}",
-      Self::BASE_URL,
-      category_id,
-      after_cursor.unwrap_or("".to_string())
-    );
-
-    let res = self.client.get(url).send().await?;
-
-    match res.status() {
-      StatusCode::OK => (),
-      StatusCode::BAD_REQUEST => {
-        eprintln!("ERROR: bad request: {:?}", res.text().await?);
-        return Err("Bad request".into());
-      }
-      StatusCode::UNAUTHORIZED => {
-        eprintln!("ERROR: unauthorized: {:?}", res.text().await?);
-        return Err("Unauthorized".into());
-      }
-      _ => {
-        eprintln!("ERROR: could not get streams: {:?}", res.text().await?);
-        return Err("Unexpected error".into());
-      }
-    }
-
-    let body: Response<Stream> = res.json().await?;
-
-    return Ok((body.data, body.pagination.cursor));
   }
 
   pub async fn get_categories(&self, keyword: &str) -> Result<Vec<Category>, Box<dyn Error>> {
