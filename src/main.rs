@@ -102,19 +102,10 @@ async fn main() {
 
   let regex_filter = Arc::new(args.filter);
 
-  let batch_size = args.batch_size;
-  for i in 0..streams.len() / batch_size + 1 {
-    // println!("Spawning batch {}", i);
-
+  for chuck in streams.chunks(args.batch_size) {
     let tx = tx.clone();
     let regex_filter = regex_filter.clone();
-
-    let streams_batch = streams
-      .iter()
-      .skip(i * batch_size)
-      .take(batch_size)
-      .map(|s| s.clone())
-      .collect();
+    let streams_batch = chuck.to_vec();
 
     tokio::spawn(async move {
       let mut irc = TwitchIrc::new(tx, streams_batch, regex_filter).await;

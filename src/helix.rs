@@ -11,7 +11,7 @@ pub struct Category {
 
 #[derive(Deserialize)]
 pub struct User {
-  pub id: String,
+  // pub id: String,
   pub login: String,
   // pub display_name: String,
   // #[serde(rename = "type")]
@@ -208,13 +208,10 @@ impl TwitchHelix {
 
   pub async fn get_category_id(&self, keyword: &str) -> Result<Option<String>, Box<dyn Error>> {
     let categories = self.get_categories(keyword).await?;
-    let keyword = keyword.to_lowercase();
-
     Ok(
       categories
         .into_iter()
-        .filter(|c| c.name.to_lowercase() == keyword)
-        .next()
+        .find(|c| c.name.eq_ignore_ascii_case(keyword))
         .map(|c| c.id),
     )
   }
@@ -257,7 +254,7 @@ mod tests {
   async fn test_get_categories() {
     let helix = new_client();
 
-    let data = helix.get_categories("Rust").await.unwrap();
+    let data = helix.get_categories("RUsT").await.unwrap();
     assert!(data.len() > 0);
 
     let data = helix.get_categories("sqdfsdfqqsdf").await.unwrap();
@@ -268,7 +265,7 @@ mod tests {
   async fn test_get_category_id() {
     let helix = new_client();
 
-    let category_id = helix.get_category_id("Rust").await.unwrap();
+    let category_id = helix.get_category_id("RUsT").await.unwrap();
     assert_eq!(category_id, Some("263490".to_string()));
 
     let category_id = helix.get_category_id("sqdfsdfqqsdf").await.unwrap();
