@@ -30,6 +30,8 @@ pub struct Args {
   pub batch_size: usize,
   #[arg(short, long, value_name = "REGEX")]
   pub filter: Regex,
+  #[arg(long, help = "Only print regex captures, not the full message")]
+  pub capture_only: bool,
   #[arg(long, help = "Save credentials to file")]
   pub save: bool,
 }

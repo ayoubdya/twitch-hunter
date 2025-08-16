@@ -52,6 +52,7 @@ Options:
   -s, --streams <STREAM1,STREAM2 ...>
   -b, --batch-size <BATCH_SIZE>        [default: 100]
   -f, --filter <REGEX>
+      --capture-only                   Only print regex captures, not the full message
       --save                           Save credentials to file
   -h, --help                           Print help
   -V, --version                        Print version

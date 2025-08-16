@@ -116,6 +116,10 @@ async fn main() {
   }
 
   while let Some(msg) = rx.recv().await {
-    println!("{msg}");
+    if !args.capture_only {
+      println!("{msg}");
+    } else {
+      println!("{}", msg.captures.join(", "));
+    }
   }
 }

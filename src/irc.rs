@@ -8,7 +8,7 @@ pub struct Message {
   pub channel: String,
   pub nickname: String,
   pub msg: String,
-  // pub captures: Vec<String>,
+  pub captures: Vec<String>,
 }
 
 impl Display for Message {
@@ -58,21 +58,20 @@ impl TwitchIrc {
       let Command::PRIVMSG(ref channel, ref msg) = message.command else {
         continue;
       };
-      if let Some(_) = self.regex_filter.captures(msg) {
+      if let Some(captures) = self.regex_filter.captures(msg) {
         let nickname = message.source_nickname().unwrap_or("unknown").to_owned();
 
-        // let captures = captures
-        //   .iter()
-        //   .skip(1)
-        //   .filter_map(|c| c)
-        //   .map(|c| c.as_str().to_owned())
-        //   .collect::<Vec<String>>();
+        let captures = captures
+          .iter()
+          .filter_map(|c| c)
+          .map(|c| c.as_str().to_owned())
+          .collect::<Vec<_>>();
 
         let msg = Message {
           channel: channel.to_owned(),
           nickname,
           msg: msg.to_owned(),
-          // captures,
+          captures,
         };
         self.sender.send(msg).await?;
       }
